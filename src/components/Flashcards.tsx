@@ -20,7 +20,8 @@ export default function Flashcards({ cards, lessonSlug }: { cards: VocabCard[]; 
   }, []);
 
   const card = cards[idx];
-  if (!card) return <p>Bài này chưa có thẻ từ vựng.</p>;
+  if (!card) return <div className="card"><p>Bài này chưa có thẻ từ vựng.</p></div>;
+  const pct = cards.length ? Math.round(((idx + 1) / cards.length) * 100) : 0;
 
   async function grade(result: "remember" | "fuzzy" | "forget") {
     const sb = getSupabase();
@@ -47,28 +48,41 @@ export default function Flashcards({ cards, lessonSlug }: { cards: VocabCard[]; 
     }
     setGraded((g) => g + 1);
     setFlipped(false);
-    setIdx((i) => (i + 1) % cards.length);
+    setTimeout(() => setIdx((i) => (i + 1) % cards.length), 180);
   }
 
   return (
     <div>
-      <div className="card flashcard" onClick={() => setFlipped((f) => !f)}>
-        {!flipped ? (<><p className="hanzi">{card.hanzi}</p><p className="progress">Chạm để lật thẻ</p></>) : (<>
-          <p className="pinyin">{card.pinyin}</p>
-          <p className="meaning">{card.meaning_vi}</p>
-          {card.example && <p className="meaning">{card.example}</p>}
-          {card.hsk_level ? <p className="progress">HSK {card.hsk_level}</p> : null}
-        </>)}
+      <div className="progress-bar"><i style={{ width: `${pct}%` }} /></div>
+      <p className="progress" style={{ marginTop: 0 }}>Thẻ {idx + 1}/{cards.length} • Đã chấm {graded} lượt • {userId ? "Đang lưu vào tài khoản của bạn ✓" : "Chế độ khách — đăng nhập để đồng bộ"}</p>
+
+      <div className="flash-wrap" style={{ marginTop: 16 }}>
+        <div className={`flashcard ${flipped ? "flipped" : ""}`} onClick={() => setFlipped((f) => !f)} role="button" aria-label="Lật thẻ">
+          {!flipped ? (
+            <div className="flash-face">
+              <div className="meta" style={{ fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", fontSize: 12 }}>Chạm để lật thẻ</div>
+              <p className="hanzi">{card.hanzi}</p>
+              <p className="progress">Bạn có nhớ nghĩa của từ này không?</p>
+            </div>
+          ) : (
+            <div className="flash-back">
+              <p className="pinyin">{card.pinyin}</p>
+              <p className="meaning">{card.meaning_vi}</p>
+              {card.example && <p className="example">{card.example}</p>}
+              {card.hsk_level ? <span className="chip" style={{ marginTop: 12 }}>HSK {card.hsk_level}</span> : null}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="row">
+        <button className="btn-grade good" onClick={() => grade("remember")}>✓ Nhớ</button>
+        <button className="btn-grade mid" onClick={() => grade("fuzzy")}>~ Lơ mơ</button>
+        <button className="btn-grade bad" onClick={() => grade("forget")}>✕ Quên</button>
       </div>
       <div className="row">
-        <button className="good" onClick={() => grade("remember")}>Nhớ</button>
-        <button className="mid" onClick={() => grade("fuzzy")}>Lơ mơ</button>
-        <button className="bad" onClick={() => grade("forget")}>Quên</button>
-      </div>
-      <p className="progress">Thẻ {idx + 1}/{cards.length} · Đã chấm {graded} lượt · {userId ? "Đang lưu tiến độ vào tài khoản của bạn" : "Chế độ khách: tiến độ lưu tạm trên máy này — đăng nhập để đồng bộ"}</p>
-      <div className="row">
-        <button onClick={() => { setIdx((i) => (i - 1 + cards.length) % cards.length); setFlipped(false); }}>← Thẻ trước</button>
-        <button onClick={() => { setIdx((i) => (i + 1) % cards.length); setFlipped(false); }}>Thẻ sau →</button>
+        <button className="btn btn-outline" onClick={() => { setIdx((i) => (i - 1 + cards.length) % cards.length); setFlipped(false); }}>← Thẻ trước</button>
+        <button className="btn btn-outline" onClick={() => { setIdx((i) => (i + 1) % cards.length); setFlipped(false); }}>Thẻ sau →</button>
       </div>
     </div>
   );

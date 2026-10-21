@@ -16,6 +16,12 @@ export default function AuthStatus() {
     if (sb) await sb.auth.signOut();
     setEmail(null);
   }
-  if (email) return <span>{email} · <a href="#" onClick={(e) => { e.preventDefault(); logout(); }}>Đăng xuất</a></span>;
-  return <a href="/login">Đăng nhập</a>;
+  if (email) return (
+    <span className="auth-email">
+      <span className="avatar-dot">{email.slice(0, 1)}</span>
+      <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{email}</span>
+      <button className="logout-btn" onClick={logout}>Đăng xuất</button>
+    </span>
+  );
+  return <a className="auth-pill" href="/login">Đăng nhập</a>;
 }
