@@ -11,9 +11,30 @@ export function getSupabase(): SupabaseClient | null {
   return client;
 }
 
+export type ExItem = { hanzi?: string; pinyin: string; meaning?: string };
+
+export type LessonBlock =
+  | { type: "lead"; text: string }
+  | { type: "callout"; text: string; warn?: boolean }
+  | { type: "subhead"; text: string }
+  | { type: "phonetics"; items: { symbol: string; guide: string; examples?: ExItem[] }[] }
+  | { type: "examples"; title?: string; items: ExItem[] }
+  | { type: "grid"; title?: string; items: string[] }
+  | { type: "tones"; items: { name: string; mark: string; pitch: string; desc: string; examples?: ExItem[] }[] }
+  | { type: "concepts"; items: { title: string; hanzi?: string; pinyin?: string; desc: string; example?: string }[] }
+  | { type: "strokes"; groups: { label: string; items: { name: string; glyph?: string; desc?: string }[] }[] }
+  | { type: "rules"; items: { text: string; hanzi?: string; example?: string }[] };
+
+export type LessonSection = {
+  id: string;
+  title: string;
+  body: string[];
+  blocks?: LessonBlock[];
+};
+
 export type LessonContent = {
   intro?: string;
-  sections?: { id: string; title: string; body: string[] }[];
+  sections?: LessonSection[];
   audio?: { src: string; title: string; slide: string; duration: string }[];
   quizzes?: Quiz[];
 };

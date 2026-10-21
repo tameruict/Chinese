@@ -222,6 +222,136 @@ function RenderLine({ line }: { line: string }) {
   );
 }
 
+/* ---------- render blocks chi tiết (nội dung v2) ---------- */
+
+import type { LessonBlock, ExItem } from "@/lib/supabase";
+
+function ExCards({ items }: { items: ExItem[] }) {
+  return (
+    <div className="ex-cards">
+      {items.map((ex, i) => (
+        <div className="ex-card" key={i}>
+          {ex.hanzi && <span className="ex-hanzi">{ex.hanzi}</span>}
+          <span className="ex-meta">
+            <b>{ex.pinyin}</b>
+            {ex.meaning && <span>{ex.meaning}</span>}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RenderBlock({ block }: { block: LessonBlock }) {
+  switch (block.type) {
+    case "lead":
+      return <p className="lecture-p lead">{block.text}</p>;
+    case "callout":
+      return <Callout text={block.text} warn={block.warn} />;
+    case "subhead":
+      return <div className="sub-label" style={{ marginTop: 6 }}>{block.text}</div>;
+    case "phonetics":
+      return (
+        <div className="phon-grid">
+          {block.items.map((it, i) => (
+            <div className="phon-card" key={i}>
+              <div className="phon-top">
+                <span className="phon-symbol">{it.symbol}</span>
+              </div>
+              <p className="phon-guide">{it.guide}</p>
+              {it.examples && it.examples.length > 0 && <ExCards items={it.examples} />}
+            </div>
+          ))}
+        </div>
+      );
+    case "examples":
+      return (
+        <div className="sub-block">
+          {block.title && <div className="sub-label">{block.title}</div>}
+          <ExCards items={block.items} />
+        </div>
+      );
+    case "grid":
+      return (
+        <div className="sub-block">
+          {block.title && <div className="sub-label">{block.title}</div>}
+          <SyllableGrid text={block.items.join(", ")} />
+        </div>
+      );
+    case "tones":
+      return (
+        <div className="tone-grid">
+          {block.items.map((t, i) => (
+            <div className="tone-card" key={i}>
+              <div className="tone-top">
+                <span className="tone-name">{t.name}</span>
+                <span className="tone-mark">{t.mark}</span>
+                <span className="tone-pitch">{t.pitch}</span>
+              </div>
+              <p className="phon-guide">{t.desc}</p>
+              {t.examples && t.examples.length > 0 && <ExCards items={t.examples} />}
+            </div>
+          ))}
+        </div>
+      );
+    case "concepts":
+      return (
+        <div className="concept-grid">
+          {block.items.map((c, i) => (
+            <div className="concept-card" key={i}>
+              <div className="concept-main">
+                <div className="concept-title">{i + 1}. {c.title}</div>
+                <p className="phon-guide">{c.desc}</p>
+                {c.example && <p className="concept-example">{c.example}</p>}
+              </div>
+              {c.hanzi && (
+                <div className="concept-hanzi">
+                  <span>{c.hanzi}</span>
+                  {c.pinyin && <small>{c.pinyin}</small>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    case "strokes":
+      return (
+        <>
+          {block.groups.map((g, gi) => (
+            <div className="sub-block" key={gi}>
+              <div className="sub-label">{g.label}</div>
+              <div className="stroke-grid">
+                {g.items.map((s, i) => (
+                  <div className="stroke-card" key={i}>
+                    {s.glyph && <span className="stroke-glyph">{s.glyph}</span>}
+                    <span className="stroke-name">{s.name}</span>
+                    {s.desc && <span className="stroke-desc">{s.desc}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      );
+    case "rules":
+      return (
+        <div className="rule-grid detailed">
+          {block.items.map((r, i) => (
+            <div className="rule-card" key={i}>
+              <span className="rule-num">{i + 1}</span>
+              <div>
+                <p>{r.text}</p>
+                {r.hanzi && <div className="rule-example"><b>{r.hanzi}</b>{r.example && <span>{r.example}</span>}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
 /* ---------- audio gắn theo mục ---------- */
 
 function AudioBlock({ items }: { items: Audio[] }) {
@@ -276,11 +406,13 @@ export default function Lecture({ sections, audio }: { sections: Section[]; audi
               <span className="lecture-num">{String(idx + 1).padStart(2, "0")}</span>
               <div>
                 <h3>{s.title}</h3>
-                <p>{s.body.length} phần nhỏ • đọc khoảng {Math.max(1, Math.round(s.body.join(" ").length / 450))} phút</p>
+                <p>{s.blocks?.length ? `${s.blocks.length} phần chi tiết` : `${s.body.length} phần nhỏ`} • đọc khoảng {Math.max(1, Math.round(JSON.stringify(s.blocks ?? s.body).length / 900))} phút</p>
               </div>
             </div>
             <div className="lecture-body">
-              {s.body.map((line, i) => <RenderLine key={i} line={line} />)}
+              {s.blocks?.length
+                ? s.blocks.map((b, i) => <RenderBlock key={i} block={b} />)
+                : s.body.map((line, i) => <RenderLine key={i} line={line} />)}
               <AudioBlock items={secAudio} />
             </div>
           </section>
