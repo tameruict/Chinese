@@ -1,0 +1,8 @@
+node_modules/
+.next/
+out/
+.env*.local
+.anon-key.json
+*.log
+.DS_Store
+public/audio/
